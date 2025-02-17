@@ -1,9 +1,13 @@
 <template>
 	<view class="fjyx">
 		<view class="" v-if="gameState === 0">
-			<button @click="beginGame">开始游戏</button>
+			<video src="../../static/video/start.mp4" autoplay loop muted :controls="false"></video>
+			<div class="logo">
+				<img src="../../static/imgs/big-game-title.png" alt="">
+			</div>
+			<div class="begin_game" @click="beginGame">开始游戏</div>
 		</view>
-		<view class="gameBox" v-else-if="gameState === 1">
+		<view class="gameBox" v-else-if="gameState === 1 || gameState === 2">
 			<canvas canvas-id="gameCanvas" width="100vw" height="100vh"></canvas>
 			<view class="words" ref="wordsRef">
 				<view class="words_box">
@@ -38,12 +42,7 @@
 					<view class="states_item_val">{{ gameTime }}</view>
 				</li>
 			</ul>
-		</view>
-		<view class="pausepage" v-else-if="gameState === 2">
-			<img class="pausepage_icon" src="../../static/imgs/pause.svg" alt="">
-			<view class="pausepage_button">继续游戏</view>
-			<view class="pausepage_button">重新开始</view>
-			<view class="pausepage_button">退出游戏</view>
+			<div class="pause" @click="pauseGame">暂停</div>
 		</view>
 		<view class="failpage" v-else-if="gameState === 3">
 			<img class="failpage_icon" src="../../static/imgs/faile_bg.svg" alt="">
@@ -54,6 +53,12 @@
 			<img class="failpage_icon" src="../../static/imgs/success-title.svg" alt="">
 			<view class="failpage_item">你赢了</view>
 			<view class="failpage_item">最终得分: {{ score }}</view>
+		</view>
+		<view class="pausepage" v-show="gameState === 2">
+			<img class="pausepage_icon" src="../../static/imgs/pause.svg" alt="">
+			<view class="pausepage_button" @click="continueGame">继续游戏</view>
+			<view class="pausepage_button">重新开始</view>
+			<view class="pausepage_button">退出游戏</view>
 		</view>
 	</view>
 </template>
@@ -69,7 +74,8 @@ import {
 	bg_img,
 	wordsMock1,
 	playerPlane,
-	enemyPlane
+	enemyPlane,
+	bulletImg
 } from './mock.js'
 
 // 用户飞机大小
@@ -87,11 +93,16 @@ const bgImgSize = {
 	width: 100,
 	height: 100,
 }
+const bulletImgSize = {
+	width: 20,
+	height: 40
+}
 const enemyList = ref([])
 const initImgSize = () => {
 	let img1 = document.createElement("img");
 	let img2 = document.createElement("img");
 	let img3 = document.createElement("img");
+	let img4 = document.createElement("img");
 	img1.src = playerPlane
 	img1.onload = () => {
 		playerPhaneSize.width = img1.width;
@@ -107,7 +118,12 @@ const initImgSize = () => {
 	img3.onload = () => {
 		bgImgSize.width = img3.width;
 		bgImgSize.height = img3.height;
-
+	}
+	
+	img4.src = bulletImg
+	img4.onload = () => {
+		bulletImgSize.width = img4.width;
+		bulletImgSize.height = img4.height;
 	}
 }
 const initEnemy = () => {
@@ -140,8 +156,10 @@ const beginGame = () => {
 const translateX = ref(0);
 let bgYPosition = 0;
 let startTimeVal = 0;
+let pauseTimeVal = 0;
 const startGame = () => {
 	ctx = uni.createCanvasContext("gameCanvas");
+	console.log("xxxx", ctx, ctx.ellipse)
 	nextTick(() => {
 		startTimeVal = new Date().getTime()
 		drawTimer = setInterval(gameLoop, 10)
@@ -169,6 +187,18 @@ const startGame = () => {
 				}, 200)
 			}
 		}
+	})
+}
+const pauseGame = () => {
+	gameState.value = 2;
+	pauseTimeVal = new Date().getTime()
+	clearInterval(drawTimer)
+}
+const continueGame = () => {
+	gameState.value = 1;
+	nextTick(() => {
+		startTimeVal += new Date().getTime() - pauseTimeVal;
+		drawTimer = setInterval(gameLoop, 10)
 	})
 }
 // 绘制背景
@@ -209,18 +239,16 @@ const drawEnemy = (enemy = {
 }
 // 绘制子弹
 const drawBullet = (bullet = {
-	x: window.innerWidth / 2,  // 初始位置在底部中心
-	y: window.innerHeight - 600,
-	width: 30,             // 子弹宽度（椭圆的宽度）
-	height: 12,            // 子弹高度（椭圆的高度）
-	speed: 5,              // 子弹的速度
-	// angle: Math.atan2(-canvas.height, canvas.width / 2),  // 发射角度：底部中心到右上角
-	color: "red",          // 中心颜色为红色
-	shadowColor: "blue",   // 阴影颜色为蓝色
-	shadowBlur: 15         // 阴影模糊度
+	x: (window.innerWidth - bulletImgSize.width) / 2,
+	y: window.innerHeight - playerPhaneSize.height - 100,
+	angle: 0,
 }) => {
-	// ctx.setFillStyle("red");
-	// ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height)
+	console.log("xxxx", bullet.x, bullet.y)
+	ctx.drawImage(bulletImg, bullet.x, bullet.y);
+	// ctx.save();
+	// ctx.rotate(20 * Math.PI / 180)
+	// // 恢复画布状态
+	// ctx.restore();
 }
 const updateWordAddress = () => {
 	nextTick(() => {
@@ -264,6 +292,7 @@ const render = () => {
 		}
 	}
 	drawPlayer();
+	drawBullet()
 	ctx.draw()
 }
 const gameLoop = () => {
@@ -284,9 +313,9 @@ const gameOver = () => {
 onMounted(() => {
 	initImgSize();
 })
-watch(health, (val)=>{
+watch(health, (val) => {
 	console.log(val)
-	if(val <= 0){
+	if (val <= 0) {
 		gameOver()
 	}
 })
@@ -296,6 +325,35 @@ watch(health, (val)=>{
 .fjyx {
 	width: 100vw;
 	height: 100vh;
+	position: relative;
+
+	video {
+		width: 100vw;
+		height: 100vh;
+	}
+
+	.logo {
+		position: absolute;
+		left: 50%;
+		top: 50px;
+		transform: translateX(-50%);
+	}
+
+	.begin_game {
+		width: 934px;
+		height: 90px;
+		background: url(../../static/imgs/space-bg.png) no-repeat;
+		background-size: 100% 100%;
+		text-align: center;
+		line-height: 90px;
+		font-size: 32px;
+		position: absolute;
+		left: 50%;
+		bottom: 150px;
+		transform: translateX(-50%);
+		cursor: pointer;
+		color: #fff;
+	}
 
 	.gameBox {
 		width: 100vw;
@@ -381,43 +439,58 @@ watch(health, (val)=>{
 		line-height: 32px;
 	}
 }
-.pausepage{
+
+.pausepage {
 	width: 100vw;
 	height: 100vh;
-	background: rgba(0,0,0,0.5);
+	background: rgba(0, 0, 0, 0.8);
 	position: absolute;
 	left: 0;
 	top: 0;
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
 	align-items: center;
-	&_icon{
+
+	&_icon {
 		width: 1000px;
 		margin-bottom: 30px;
+		margin-top: 180px;
 	}
-	&_button{
+
+	&_button {
 		width: 220px;
 		height: 30px;
-		background: url(../../static/imgs/input-bg.svg) no-repeat;
+		background: url(../../static/imgs/button_bg.svg) no-repeat;
 		background-size: 100% 100%;
 		line-height: 30px;
 		text-align: center;
 		color: #fff;
 		cursor: pointer;
+		margin-bottom: 20px;
 	}
 }
-.failpage{
+
+.pause {
+	position: absolute;
+	right: 20px;
+	top: 20px;
+	cursor: pointer;
+	color: #fff;
+	font-size: 28px;
+}
+
+.failpage {
 	text-align: center;
 	font-size: 32px;
 	line-height: 72px;
 	width: 100vw;
 	height: 100vh;
 	position: absolute;
-	background: rgba(0,0,0,0.5);
+	background: rgba(0, 0, 0, 0.5);
 	left: 0;
 	top: 0;
-	&_icon{
+
+	&_icon {
 		width: 1000px;
 		margin-bottom: 30px;
 		margin-top: 200px;
