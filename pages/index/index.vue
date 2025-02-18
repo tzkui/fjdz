@@ -151,6 +151,7 @@ const initEnemy = () => {
       y: -enemyPlaneSize.height - index * 500,
       text: item,
       live: true,
+			textIndex: 0
     });
   });
 };
@@ -158,7 +159,6 @@ const wordsRef = ref();
 const wordsList = ref(wordsMock1);
 const xIndex = ref(0);
 const yIndex = ref(0);
-
 const gameState = ref(0); // 0: 等待界面， 1: 游戏中， 2: 暂停， 3：游戏失败， 4：游戏胜利
 const score = ref(0);
 const health = ref(100);
@@ -195,10 +195,11 @@ const startGame = () => {
           distance: Math.sqrt(
             Math.pow(enemyY - buy, 2) + Math.pow(enemyX - bux, 2)
           ),
+					target: [xIndex.value, yIndex.value+1]
         });
 
         if (wordsList.value[xIndex.value].length <= yIndex.value + 1) {
-          enemyList.value[xIndex.value++].live = false;
+					xIndex.value++
           yIndex.value = 0;
           score.value += 10;
           if (xIndex.value >= wordsList.value.length) {
@@ -254,15 +255,16 @@ const drawEnemy = (
     y: 0,
     text: "apple",
     live: true,
+		textIndex: 0,
   }
 ) => {
   ctx.drawImage(enemyPlane, enemy.x, enemy.y);
   let n = enemy.text.length;
   for (let i = 0; i < n; i++) {
     ctx.font = "30px Arial"; // 设置字体大小和字体
-    if (yIndex.value === 0) {
+    if (enemy.textIndex === 0) {
       ctx.fillStyle = "#fff";
-    } else if (i < yIndex.value) {
+    } else if (i < enemy.textIndex) {
       ctx.fillStyle = "transparent";
     } else {
       ctx.fillStyle = "#d29831";
@@ -311,13 +313,16 @@ const updateData = () => {
     item.y += 1;
     if (item.live && item.y > window.innerHeight - enemyPlaneSize.height - 10) {
       item.failed = true;
-      item.live = false;
+			item.live = false
       xIndex.value++;
       yIndex.value = 0;
       updateWordAddress();
       health.value -= 10;
       break;
     }
+		if(item.live && item.text.length<=item.textIndex){
+			item.live = false
+		}
   }
 
   // 子弹位置
@@ -326,8 +331,9 @@ const updateData = () => {
     item.x += Math.cos(item.angle) * speed;
     item.y += Math.sin(item.angle) * speed;
     item.distance -= speed;
-    if (item.distance <= 20) {
+    if (item.distance <= 30) {
       bulletList.value.splice(index, 1);
+			enemyList.value[item.target[0]].textIndex = item.target[1]
     }
   });
 
