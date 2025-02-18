@@ -7,7 +7,7 @@
       </div>
       <div class="begin_game" @click="beginGame">开始游戏</div>
     </view>
-    <view class="gameBox" v-else-if="gameState === 1 || gameState === 2">
+    <view class="gameBox" v-else>
       <canvas canvas-id="gameCanvas" width="100vw" height="100vh"></canvas>
       <view class="words" ref="wordsRef">
         <view class="words_box">
@@ -55,12 +55,14 @@
       </ul>
       <div class="pause" @click="pauseGame">暂停</div>
     </view>
-    <view class="failpage" v-else-if="gameState === 3">
+    <view class="failpage" v-show="gameState === 3">
       <img class="failpage_icon" src="../../static/imgs/faile_bg.svg" alt="" />
       <view class="failpage_item">你输了</view>
       <view class="failpage_item">最终得分: {{ score }}</view>
+      <view class="button" @click="resetGame">重新开始</view>
+      <view class="button" @click="exitGame">退出游戏</view>
     </view>
-    <view class="failpage" v-else-if="gameState === 4">
+    <view class="failpage" v-show="gameState === 4">
       <img
         class="failpage_icon"
         src="../../static/imgs/success-title.svg"
@@ -68,12 +70,14 @@
       />
       <view class="failpage_item">你赢了</view>
       <view class="failpage_item">最终得分: {{ score }}</view>
+      <view class="button" @click="resetGame">重新开始</view>
+      <view class="button" @click="exitGame">退出游戏</view>
     </view>
     <view class="pausepage" v-show="gameState === 2">
       <img class="pausepage_icon" src="../../static/imgs/pause.svg" alt="" />
-      <view class="pausepage_button" @click="continueGame">继续游戏</view>
-      <view class="pausepage_button" @click="resetGame">重新开始</view>
-      <view class="pausepage_button" @click="exitGame">退出游戏</view>
+      <view class="button" @click="continueGame">继续游戏</view>
+      <view class="button" @click="resetGame">重新开始</view>
+      <view class="button" @click="exitGame">退出游戏</view>
     </view>
   </view>
 </template>
@@ -548,7 +552,9 @@ watch(health, (val) => {
     margin-top: 180px;
   }
 
-  &_button {
+}
+
+.button {
     width: 220px;
     height: 30px;
     background: url(../../static/imgs/button_bg.svg) no-repeat;
@@ -557,10 +563,9 @@ watch(health, (val) => {
     text-align: center;
     color: #fff;
     cursor: pointer;
-    margin-bottom: 20px;
+    margin:0 auto 20px;
+		font-size: 16px;
   }
-}
-
 .pause {
   position: absolute;
   right: 20px;
