@@ -27,6 +27,7 @@
               <view
                 :class="{
                   single_word: true,
+                  successed: idx === xIndex && index<yIndex,
                   active: idx === xIndex && index === yIndex,
                   error: inputError,
                 }"
@@ -515,6 +516,9 @@ watch(health, (val) => {
             background: none;
             color: rgba(255, 0, 0, 0.4);
           }
+        }
+        &.successed{
+          color: orange;
         }
       }
     }
