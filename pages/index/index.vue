@@ -1,13 +1,7 @@
 <template>
   <view class="fjyx">
     <view class="" v-if="gameState === 0">
-      <video
-        src="../../static/video/start.mp4"
-        autoplay
-        loop
-        muted
-        :controls="false"
-      ></video>
+      <video :src="videoSrc" autoplay loop muted :controls="false"></video>
       <div class="logo">
         <img src="../../static/imgs/big-game-title.png" alt="" />
       </div>
@@ -78,8 +72,8 @@
     <view class="pausepage" v-show="gameState === 2">
       <img class="pausepage_icon" src="../../static/imgs/pause.svg" alt="" />
       <view class="pausepage_button" @click="continueGame">继续游戏</view>
-      <view class="pausepage_button">重新开始</view>
-      <view class="pausepage_button">退出游戏</view>
+      <view class="pausepage_button" @click="resetGame">重新开始</view>
+      <view class="pausepage_button" @click="exitGame">退出游戏</view>
     </view>
   </view>
 </template>
@@ -94,6 +88,7 @@ import {
   bulletImg,
 } from "./mock.js";
 
+const videoSrc = ref("../../static/video/start.mp4");
 // 用户飞机大小
 const playerPhaneSize = {
   width: 100,
@@ -151,12 +146,12 @@ const initEnemy = () => {
       y: -enemyPlaneSize.height - index * 500,
       text: item,
       live: true,
-			textIndex: 0
+      textIndex: 0,
     });
   });
 };
 const wordsRef = ref();
-const wordsList = ref(wordsMock1);
+const wordsList = ref([...wordsMock1]);
 const xIndex = ref(0);
 const yIndex = ref(0);
 const gameState = ref(0); // 0: 等待界面， 1: 游戏中， 2: 暂停， 3：游戏失败， 4：游戏胜利
@@ -167,8 +162,12 @@ const inputError = ref(false);
 let ctx = null;
 let drawTimer = null;
 const beginGame = () => {
-  gameState.value = 1;
-  startGame();
+  videoSrc.value = "../../static/video/mist.mov";
+  setTimeout(() => {
+    gameState.value = 1;
+    startGame();
+		videoSrc.value = "../../static/video/start.mp4";
+  }, 500);
 };
 const translateX = ref(0);
 let bgYPosition = 0;
@@ -180,44 +179,6 @@ const startGame = () => {
     startTimeVal = new Date().getTime();
     drawTimer = setInterval(gameLoop, 10);
   });
-  document.addEventListener("keyup", function (e) {
-    if (gameState.value === 1) {
-      let input = e.key;
-      if (input === wordsList.value[xIndex.value][yIndex.value]) {
-        let bux = (window.innerWidth - bulletImgSize.width) / 2;
-        let buy = window.innerHeight - playerPhaneSize.height - 220;
-        let enemyX = enemyList.value[xIndex.value].x + enemyPlaneSize.width / 2;
-        let enemyY = enemyList.value[xIndex.value].y + enemyPlaneSize.height;
-        bulletList.value.push({
-          x: bux,
-          y: buy,
-          angle: Math.atan2(enemyY - buy, enemyX - bux),
-          distance: Math.sqrt(
-            Math.pow(enemyY - buy, 2) + Math.pow(enemyX - bux, 2)
-          ),
-					target: [xIndex.value, yIndex.value+1]
-        });
-
-        if (wordsList.value[xIndex.value].length <= yIndex.value + 1) {
-					xIndex.value++
-          yIndex.value = 0;
-          score.value += 10;
-          if (xIndex.value >= wordsList.value.length) {
-            youWin();
-          }
-        } else {
-          yIndex.value++;
-        }
-        updateWordAddress();
-      } else {
-        health.value -= 10;
-        inputError.value = true;
-        setTimeout(() => {
-          inputError.value = false;
-        }, 200);
-      }
-    }
-  });
 };
 const pauseGame = () => {
   gameState.value = 2;
@@ -228,8 +189,27 @@ const continueGame = () => {
   gameState.value = 1;
   nextTick(() => {
     startTimeVal += new Date().getTime() - pauseTimeVal;
-    drawTimer = setInterval(gameLoop, 100);
+    drawTimer = setInterval(gameLoop, 10);
   });
+};
+const resetGame = () => {
+	exitGame()
+	beginGame();
+};
+const exitGame = () => {
+  gameState.value = 0;
+  clearInterval(drawTimer);
+	bgYPosition = 0;
+	startTimeVal = 0;
+	pauseTimeVal = 0;
+	translateX.value = 0
+	gameTime.value = "00:00";
+	score.value = 0;
+	health.value = 100;
+	xIndex.value = 0;
+	yIndex.value = 0;
+	wordsList.value = [...wordsMock1]
+	initEnemy()
 };
 // 绘制背景
 const drawBg = () => {
@@ -255,7 +235,7 @@ const drawEnemy = (
     y: 0,
     text: "apple",
     live: true,
-		textIndex: 0,
+    textIndex: 0,
   }
 ) => {
   ctx.drawImage(enemyPlane, enemy.x, enemy.y);
@@ -313,16 +293,16 @@ const updateData = () => {
     item.y += 1;
     if (item.live && item.y > window.innerHeight - enemyPlaneSize.height - 10) {
       item.failed = true;
-			item.live = false
+      item.live = false;
       xIndex.value++;
       yIndex.value = 0;
       updateWordAddress();
       health.value -= 10;
       break;
     }
-		if(item.live && item.text.length<=item.textIndex){
-			item.live = false
-		}
+    if (item.live && item.text.length <= item.textIndex) {
+      item.live = false;
+    }
   }
 
   // 子弹位置
@@ -333,7 +313,7 @@ const updateData = () => {
     item.distance -= speed;
     if (item.distance <= 30) {
       bulletList.value.splice(index, 1);
-			enemyList.value[item.target[0]].textIndex = item.target[1]
+      enemyList.value[item.target[0]].textIndex = item.target[1];
     }
   });
 
@@ -382,8 +362,48 @@ const gameOver = () => {
   clearInterval(drawTimer);
   gameState.value = 3;
 };
+const bindKeyupEvent = function (e) {
+  if (gameState.value === 1) {
+    let input = e.key;
+    if (input === wordsList.value[xIndex.value][yIndex.value]) {
+      let bux = (window.innerWidth - bulletImgSize.width) / 2;
+      let buy = window.innerHeight - playerPhaneSize.height - 220;
+      let enemyX = enemyList.value[xIndex.value].x + enemyPlaneSize.width / 2;
+      let enemyY = enemyList.value[xIndex.value].y + enemyPlaneSize.height;
+      bulletList.value.push({
+        x: bux,
+        y: buy,
+        angle: Math.atan2(enemyY - buy, enemyX - bux),
+        distance: Math.sqrt(
+          Math.pow(enemyY - buy, 2) + Math.pow(enemyX - bux, 2)
+        ),
+        target: [xIndex.value, yIndex.value + 1],
+      });
+
+      if (wordsList.value[xIndex.value].length <= yIndex.value + 1) {
+        xIndex.value++;
+        yIndex.value = 0;
+        score.value += 10;
+        if (xIndex.value >= wordsList.value.length) {
+          youWin();
+        }
+      } else {
+        yIndex.value++;
+      }
+      updateWordAddress();
+    } else {
+      health.value -= 10;
+      inputError.value = true;
+      setTimeout(() => {
+        inputError.value = false;
+      }, 200);
+    }
+  }
+};
 onMounted(() => {
   initImgSize();
+
+  document.addEventListener("keyup", bindKeyupEvent);
 });
 watch(health, (val) => {
   if (val <= 0) {
