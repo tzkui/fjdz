@@ -19,7 +19,6 @@ const gameList = ref([
 ])
 
 const playGame = (item) => {
-  console.log("xxxx", uni)
   uni.navigateTo({
     url: item.path || '/pages/developing/index'
   })
