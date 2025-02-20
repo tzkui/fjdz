@@ -19,4 +19,4 @@ class AudioPlayer {
 }
 export default AudioPlayer
 export const bgAudioPlayer = new AudioPlayer("../../static/audio/bg.mp3")
-export const dieAudioPlayer = new AudioPlayer("../../static/audio/die.mp3")
+export const startAudioPlayer = new AudioPlayer("../../static/audio/launch-arrow.mp3")

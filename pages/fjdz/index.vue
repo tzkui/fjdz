@@ -119,7 +119,7 @@ import {
 	bulletImg,
 	boomImg,
 } from "./mock.js";
-import AudioPlayer, {bgAudioPlayer, dieAudioPlayer} from './audioPlayers.js'
+import AudioPlayer, {bgAudioPlayer, startAudioPlayer} from './audioPlayers.js'
 
 const difficultyList = ref([
 	{ name: "简单", val: 1 },
@@ -237,6 +237,7 @@ let ctx = null;
 let drawTimer = null;
 const beginGame = () => {
 	videoSrc.value = "../../static/video/mist.mov";
+	startAudioPlayer.play()
 	setTimeout(() => {
 		gameState.value = 1;
 		enemyStep.value = selectedDiff.value;
