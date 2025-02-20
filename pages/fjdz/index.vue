@@ -152,7 +152,9 @@ const boomImgSize = {
 	width: 200,
 	height: 200
 }
-
+const gameOverCb = (type) => {
+	console.log(type)
+}
 const enemyList = ref([]);
 const bulletList = ref([]);
 const doLoading = () => {
@@ -430,7 +432,7 @@ const updateData = () => {
 			yIndex.value = 0;
 			updateWordAddress();
 			health.value -= 10;
-			dieAudioPlayer.play()
+			new AudioPlayer("../../static/audio/die.mp3").play() 
 			boomList.push({
 				idx: -1,
 				x: item.x,
@@ -440,6 +442,7 @@ const updateData = () => {
 		}
 		if (item.live && item.text.length <= item.textIndex) {
 			item.live = false;
+			new AudioPlayer("../../static/audio/die.mp3").play() 
 		}
 	}
 
@@ -452,7 +455,6 @@ const updateData = () => {
 		if (item.distance <= 30) {
 			bulletList.value.splice(index, 1);
 			enemyList.value[item.target[0]].textIndex = item.target[1];
-			new AudioPlayer("../../static/audio/die.mp3").play() 
 			boomList.push({
 				idx: -1,
 				x: item.x - boomImgSize.width / 2,
@@ -511,10 +513,12 @@ const youWin = () => {
 	xIndex.value = 0;
 	yIndex.value = 0;
 	gameState.value = 4;
+	gameOverCb()
 };
 const gameOver = () => {
 	clearInterval(drawTimer);
 	gameState.value = 3;
+	gameOverCb("failed")
 };
 const bindKeyupEvent = function (e) {
 	if (gameState.value === 1) {
