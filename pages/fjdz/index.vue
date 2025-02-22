@@ -1,5 +1,13 @@
 <template>
-	<view class="fjyx">
+	<view class="listpage" v-if="nowPage===0">
+    <view class="title">选择游戏</view>
+    <ul class="game_list">
+      <li v-for="item in gameList" :key="item.id" @click="nowPage = item.page || -1">
+        <img :src="item.img" alt="">
+      </li>
+    </ul>
+  </view>
+	<view class="fjyx" v-else-if="nowPage===1">
 		<view class="loadingpage" v-if="gameState == -1">
 			<div class="logo">
 				<img src="../../static/imgs/big-game-title.png" alt="" />
@@ -106,6 +114,10 @@
 			</div>
 		</view>
 	</view>
+	<view v-else class="developing">
+		<view>功能还在开放中</view>
+		<button @click="nowPage=0">返回</button>
+	</view>
 </template>
 
 <script setup>
@@ -121,6 +133,12 @@ import {
 } from "./mock.js";
 import AudioPlayer, {bgAudioPlayer, startAudioPlayer} from './audioPlayers.js'
 
+const gameList = ref([
+  {id: 1,img: "../../static/imgs/game1.png"},
+  {id: 2,img: "../../static/imgs/game2.jpg"},
+  {id: 3,img: "../../static/imgs/game3.jpg", page: 1},
+])
+const nowPage = ref(0)
 const difficultyList = ref([
 	{ name: "简单", val: 1 },
 	{ name: "普通", val: 2 },
@@ -271,7 +289,8 @@ const continueGame = () => {
 };
 const resetGame = () => {
 	exitGame()
-	beginGame();
+	// beginGame();
+	nowPage.value = 0
 };
 const exitGame = () => {
 	gameState.value = 0;
@@ -443,6 +462,11 @@ const updateData = () => {
 		}
 		if (item.live && item.text.length <= item.textIndex) {
 			item.live = false;
+			boomList.push({
+				idx: -1,
+				x: item.x,
+				y: item.y
+			})
 			new AudioPlayer("../../static/audio/die.mp3").play() 
 		}
 	}
@@ -456,11 +480,6 @@ const updateData = () => {
 		if (item.distance <= 30) {
 			bulletList.value.splice(index, 1);
 			enemyList.value[item.target[0]].textIndex = item.target[1];
-			boomList.push({
-				idx: -1,
-				x: item.x - boomImgSize.width / 2,
-				y: item.y - boomImgSize.height / 2
-			})
 		}
 	});
 	// 爆炸效果
@@ -580,6 +599,43 @@ watch(health, (val) => {
 </script>
 
 <style scoped lang="scss">
+.listpage{
+  width: 100vw;
+  height: 100vh;
+  background: #22252e;
+  .title{
+    text-align: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 32px;
+    padding-top: 200px;
+    margin-bottom: 40px;
+  }
+  .game_list{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    li{
+      width: 335px;
+      height: 425px;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      img{
+        width: 100%;
+        height: 100%;
+        transition: .3s;
+      }
+      &:hover{
+        img{
+          transform: scale(1.1);
+          transform-origin: center center;
+        }
+      }
+    }
+  }
+}
 .fjyx {
 	width: 100vw;
 	height: 100vh;
@@ -843,6 +899,14 @@ watch(health, (val) => {
 		width: 1000px;
 		margin-bottom: 30px;
 		margin-top: 200px;
+	}
+}
+.developing{
+	width: 200px;
+	margin: 200px auto;
+	text-align: center;
+	button{
+		margin-top: 20px;
 	}
 }
 </style>

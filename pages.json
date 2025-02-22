@@ -1,25 +1,24 @@
 {
 	"pages": [
 		{
-			"path": "pages/list/index",
-			"style": {
-        "navigationBarTitleText": "首页",
-				"navigationStyle": "custom"
-      }
-		},
-		{
 			"path": "pages/fjdz/index",
 			"style": {
-        "navigationBarTitleText": "飞机大战",
+				"navigationBarTitleText": "飞机大战",
 				"navigationStyle": "custom"
-      }
+			}
+		},{
+			"path": "pages/list/index",
+			"style": {
+				"navigationBarTitleText": "首页",
+				"navigationStyle": "custom"
+			}
 		},
 		{
 			"path": "pages/developing/index",
 			"style": {
-        "navigationBarTitleText": "开发中",
+				"navigationBarTitleText": "开发中",
 				"navigationStyle": "custom"
-      }
+			}
 		}
 	],
 	"uniIdRouter": {}
