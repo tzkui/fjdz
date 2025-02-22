@@ -1,1 +1,5 @@
 游戏结束回调函数搜索 gameOverCb
+
+玩家飞机图片的xy位置搜索 playerImgAddressList， drawPlayer方法里面有个gap，可以修改它更改切换图片的频率，数字越大，切换越慢
+
+爆炸效果图片的xy位置搜索 boomAddressList
