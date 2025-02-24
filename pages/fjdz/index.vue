@@ -135,7 +135,7 @@ import {
 	bulletImg,
 	boomImg,
 } from "./mock.js";
-import AudioPlayer, { bgAudioPlayer, startAudioPlayer, countdownAudioPlayer } from './audioPlayers.js'
+import AudioPlayer, { bgAudioPlayer, startAudioPlayer } from './audioPlayers.js'
 
 const gameList = ref([
 	{ id: 1, img: "../../static/imgs/game1.png" },
@@ -289,10 +289,11 @@ let startTimeVal = 0;
 let pauseTimeVal = 0;
 const startGame = () => {
 	ctx = uni.createCanvasContext("gameCanvas");
+	bgAudioPlayer.setCurrentTime(0)
 	nextTick(() => {
 		startTimeVal = new Date().getTime();
 		drawTimer = setInterval(gameLoop, 10);
-		bgAudioPlayer.play()
+		bgAudioPlayer.play(0)
 	});
 };
 const pauseGame = () => {

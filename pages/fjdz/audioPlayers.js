@@ -1,12 +1,11 @@
 class AudioPlayer {
   constructor(url,config={}){
-    console.log(url,config)
     this.audio = document.createElement("audio");
     this.audio.src = url
   }
   play(time) {
     if (time) {
-      this.audio.currentTime = time
+      this.audio.currentTime = time;
     }
     this.audio.play()
   }
@@ -15,6 +14,9 @@ class AudioPlayer {
   }
   setSrc(src) {
     this.audio.src = src
+  }
+  setCurrentTime(time){
+    this.audio.currentTime = time
   }
 }
 export default AudioPlayer
