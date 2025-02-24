@@ -1,13 +1,13 @@
 <template>
-	<view class="listpage" v-if="nowPage===0">
-    <view class="title">选择游戏</view>
-    <ul class="game_list">
-      <li v-for="item in gameList" :key="item.id" @click="nowPage = item.page || -1">
-        <img :src="item.img" alt="">
-      </li>
-    </ul>
-  </view>
-	<view class="fjyx" v-else-if="nowPage===1">
+	<view class="listpage" v-if="nowPage === 0">
+		<view class="title">选择游戏</view>
+		<ul class="game_list">
+			<li v-for="item in gameList" :key="item.id" @click="nowPage = item.page || -1">
+				<img :src="item.img" alt="">
+			</li>
+		</ul>
+	</view>
+	<view class="fjyx" v-else-if="nowPage === 1">
 		<view class="loadingpage" v-if="gameState == -1">
 			<div class="logo">
 				<img src="../../static/imgs/big-game-title.png" alt="" />
@@ -47,6 +47,10 @@
 				<img src="../../static/imgs/icon3.gif" alt="">
 				<img src="../../static/imgs/icon4.png" alt="">
 			</div>
+		</view>
+		<view class="pendding" v-else-if="gameState === 5">
+			<view class="countdown" v-if="countdown>0">{{ countdown }}</view>
+			<video :src="videoSrc" autoplay loop muted :controls="false" v-else preload="auto"></video>
 		</view>
 		<view class="gameBox" v-else>
 			<canvas canvas-id="gameCanvas" width="100vw" height="100vh"></canvas>
@@ -116,7 +120,7 @@
 	</view>
 	<view v-else class="developing">
 		<view>功能还在开放中</view>
-		<button @click="nowPage=0">返回</button>
+		<button @click="nowPage = 0">返回</button>
 	</view>
 </template>
 
@@ -131,14 +135,15 @@ import {
 	bulletImg,
 	boomImg,
 } from "./mock.js";
-import AudioPlayer, {bgAudioPlayer, startAudioPlayer} from './audioPlayers.js'
+import AudioPlayer, { bgAudioPlayer, startAudioPlayer, countdownAudioPlayer } from './audioPlayers.js'
 
 const gameList = ref([
-  {id: 1,img: "../../static/imgs/game1.png"},
-  {id: 2,img: "../../static/imgs/game2.jpg"},
-  {id: 3,img: "../../static/imgs/game3.jpg", page: 1},
+	{ id: 1, img: "../../static/imgs/game1.png" },
+	{ id: 2, img: "../../static/imgs/game2.jpg" },
+	{ id: 3, img: "../../static/imgs/game3.jpg", page: 1 },
 ])
 const nowPage = ref(0)
+const countdown = ref(4)
 const difficultyList = ref([
 	{ name: "简单", val: 1 },
 	{ name: "普通", val: 2 },
@@ -254,14 +259,29 @@ const watingPrecent = ref(0)
 let ctx = null;
 let drawTimer = null;
 const beginGame = () => {
-	videoSrc.value = "../../static/video/mist.mov";
-	startAudioPlayer.play()
-	setTimeout(() => {
-		gameState.value = 1;
-		enemyStep.value = selectedDiff.value;
-		startGame();
-		videoSrc.value = "../../static/video/start.mp4";
-	}, 500);
+	gameState.value = 5
+	let doCountdown = function(){
+		countdown.value--
+		if(countdown.value>0){
+			new AudioPlayer("../../static/audio/countdown.mp3").play()
+			setTimeout(()=>{
+				doCountdown()
+			}, 1000)
+		}else{
+			videoSrc.value = "../../static/video/mist.mov";
+		}
+	}
+	doCountdown()
+	setTimeout(()=>{
+		startAudioPlayer.play()
+		setTimeout(() => {
+			gameState.value = 1;
+			enemyStep.value = selectedDiff.value;
+			countdown.value = 4
+			startGame();
+			videoSrc.value = "../../static/video/start.mp4";
+		}, 500);
+	}, 3200)
 };
 const translateX = ref(0);
 let bgYPosition = 0;
@@ -290,10 +310,12 @@ const continueGame = () => {
 const resetGame = () => {
 	exitGame()
 	// beginGame();
+	bgAudioPlayer.pause()
 	nowPage.value = 0
 };
 const exitGame = () => {
 	gameState.value = 0;
+	bgAudioPlayer.pause()
 	clearInterval(drawTimer);
 	bgYPosition = 0;
 	startTimeVal = 0;
@@ -452,7 +474,7 @@ const updateData = () => {
 			yIndex.value = 0;
 			updateWordAddress();
 			health.value -= 10;
-			new AudioPlayer("../../static/audio/die.mp3").play() 
+			new AudioPlayer("../../static/audio/die.mp3").play()
 			boomList.push({
 				idx: -1,
 				x: item.x,
@@ -467,7 +489,7 @@ const updateData = () => {
 				x: item.x,
 				y: item.y
 			})
-			new AudioPlayer("../../static/audio/die.mp3").play() 
+			new AudioPlayer("../../static/audio/die.mp3").play()
 		}
 	}
 
@@ -582,7 +604,7 @@ const bindKeyupEvent = function (e) {
 		if (e.code === 'Space') {
 			beginGame()
 		}
-	}else if(gameState.value === 2){
+	} else if (gameState.value === 2) {
 		continueGame()
 	}
 };
@@ -599,51 +621,109 @@ watch(health, (val) => {
 </script>
 
 <style scoped lang="scss">
-.listpage{
-  width: 100vw;
-  height: 100vh;
-  background: #22252e;
-  .title{
-    text-align: center;
-    color: #fff;
-    font-weight: 600;
-    font-size: 32px;
-    padding-top: 200px;
-    margin-bottom: 40px;
-  }
-  .game_list{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 32px;
-    li{
-      width: 335px;
-      height: 425px;
-      border-radius: 10px;
-      overflow: hidden;
-      cursor: pointer;
-      img{
-        width: 100%;
-        height: 100%;
-        transition: .3s;
-      }
-      &:hover{
-        img{
-          transform: scale(1.1);
-          transform-origin: center center;
-        }
-      }
-    }
-  }
+@keyframes fade {
+	0% {
+		opacity: 0;
+	}
+
+	50% {
+		opacity: 1;
+	}
+
+	100% {
+		opacity: 0;
+	}
 }
+.pendding{
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: url(../../static/imgs/pending.png) no-repeat;
+	background-size: 100% 100%;
+}
+.countdown {
+	font-size: 80px;
+	font-weight: bold;
+	color: #fff;
+	opacity: 1;
+	animation: fade 1s infinite;
+}
+
+.listpage {
+	width: 100vw;
+	height: 100vh;
+	background: #22252e;
+
+	.title {
+		text-align: center;
+		color: #fff;
+		font-weight: 600;
+		font-size: 32px;
+		padding-top: 200px;
+		margin-bottom: 40px;
+	}
+
+	.game_list {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 32px;
+
+		li {
+			width: 335px;
+			height: 425px;
+			border-radius: 10px;
+			overflow: hidden;
+			cursor: pointer;
+
+			img {
+				width: 100%;
+				height: 100%;
+				transition: .3s;
+			}
+
+			&:hover {
+				img {
+					transform: scale(1.1);
+					transform-origin: center center;
+				}
+			}
+		}
+	}
+}
+
 .fjyx {
 	width: 100vw;
 	height: 100vh;
 	position: relative;
 	color: #fff;
+
 	video {
 		width: 1920px;
 		height: 1080px;
+		pointer-events: none;
+		/* 隐藏所有控件 */
+    -webkit-media-controls {
+      display: none !important;
+    }
+    /* 隐藏播放按钮 */
+    &::-webkit-media-controls-play-button {
+      display: none !important;
+    }
+    /* 隐藏进度条 */
+    &::-webkit-media-controls-timeline {
+      display: none !important;
+    }
+    /* 隐藏音量控件 */
+    &::-webkit-media-controls-volume-slider {
+      display: none !important;
+    }
+    /* 隐藏全屏按钮 */
+    &::-webkit-media-controls-fullscreen-button {
+      display: none !important;
+    }
 	}
 
 	.logo {
@@ -901,11 +981,13 @@ watch(health, (val) => {
 		margin-top: 200px;
 	}
 }
-.developing{
+
+.developing {
 	width: 200px;
 	margin: 200px auto;
 	text-align: center;
-	button{
+
+	button {
 		margin-top: 20px;
 	}
 }

@@ -20,3 +20,4 @@ class AudioPlayer {
 export default AudioPlayer
 export const bgAudioPlayer = new AudioPlayer("../../static/audio/bg.mp3")
 export const startAudioPlayer = new AudioPlayer("../../static/audio/launch-arrow.mp3")
+export const countdownAudioPlayer = new AudioPlayer("../../static/audio/countdown.mp3")
