@@ -621,6 +621,9 @@ watch(health, (val) => {
 </script>
 
 <style scoped lang="scss">
+::-webkit-scrollbar{
+	display: none;
+}
 @keyframes fade {
 	0% {
 		opacity: 0;
