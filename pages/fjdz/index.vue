@@ -564,6 +564,7 @@ const gameOver = () => {
 	gameOverCb("failed")
 };
 const bindKeyupEvent = function (e) {
+	e.preventDefault()
 	if (gameState.value === 1) {
 		let input = e.key;
 		if (input === wordsList.value[xIndex.value][yIndex.value]) {
@@ -612,6 +613,7 @@ const bindKeyupEvent = function (e) {
 onMounted(() => {
 	initImgSize();
 	document.addEventListener("keyup", bindKeyupEvent);
+	document.addEventListener("keydown", function(event){event.preventDefault();})
 	doLoading()
 });
 watch(health, (val) => {
