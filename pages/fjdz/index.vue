@@ -602,7 +602,6 @@ const bindKeyupEvent = function (e) {
 			}, 200);
 		}
 	} else if (gameState.value === 0) {
-		console.log(e)
 		if (e.code === 'Space') {
 			beginGame()
 		}
