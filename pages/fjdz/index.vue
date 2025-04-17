@@ -651,7 +651,7 @@ const bindKeyupEvent = function (e) {
       bulletList.value.push({
         x: bux,
         y: buy,
-        angle: Math.atan2(enemyY - buy, enemyX - bux),
+        angle: Math.atan2(enemyY - buy - bulletImgSize.height, enemyX - bux),
         distance: Math.sqrt(
           Math.pow(enemyY - buy, 2) + Math.pow(enemyX - bux, 2)
         ),
